@@ -1,89 +1,91 @@
-import java.io.*;
-import java.util.*;
-class StableMarriage {
-	
 
+// By Chris Schultz
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class StableMarriage {
+
+	public static void main(String[] args) throws FileNotFoundException {
+		 Scanner in = new Scanner(System.in);
+		 String file = in.nextLine();
+		 in.close();
+		 new StableMarriage2().checkMatch(file);
+	 }
 	
- public static void main(String[] args) {
-   
-	 new StableMarriage().checkMatch();
-	 
- }
- 
- public void checkMatch(){
-	 Scanner sc = new Scanner(System.in);
-	 int numPeople = sc.nextInt();
-	 List<Integer> indList = new ArrayList<Integer>();
-	 int unhappyCount = 0;
-	 List<List<Integer>> prefList = new ArrayList<List<Integer>>();
-	 List<List<Integer>> unhappyManList = new ArrayList<List<Integer>>();
-	 List<List<Integer>> unhappyWomanList = new ArrayList<List<Integer>>();
-	 int personCount = 1; //put the number of the person in the array
-	//i< numPeople * num preferences each person has * 2 for men and women + numPeople for the last row(the matching)
-	 for (int i = 0; i < numPeople*numPeople*2+numPeople; i++) { 
+	public void checkMatch(String file) throws FileNotFoundException{
+		 Scanner sc = new Scanner(new FileReader(file)); //read in the file
+		 List<Integer> indList = new ArrayList<Integer>(); //list of each person's preference list individually
+		 List<List<Integer>> manList = new ArrayList<List<Integer>>(); //list of all of the mens preference lists
+		 List<List<Integer>> womanList = new ArrayList<List<Integer>>(); //list of all of the womens preference lists
+		 List<Integer> unstableSingle = new ArrayList<Integer>(); //a single set of (m,w) that are unstable
+		 List<List<Integer>> unstableAll = new ArrayList<List<Integer>>(); //the set of all instabilities
+		 List<List<Integer>> theMatching = new ArrayList<List<Integer>>(); //the matching
+		 int personCount = 1; //put the number of the person in the array
+		 boolean stable = true; //whether the match is stable or not
+		 int numPeople = sc.nextInt(); //the first number read in
 		 
-		 int preference = sc.nextInt();
-		 indList.add(preference);
 		 
-		 if(indList.size()%numPeople == 0 ){
-			 //need to add man number and woman number to each group so i can compare them later
-			 indList.add(personCount);
-			 prefList.add(indList);
-			 indList = new ArrayList<Integer>();
-			 personCount++;
-			 if(personCount>numPeople){
-				 personCount=1; //goes up to man number 1,2...n then resets and goes up women 1,2...n last match will always have a 1
-				 
+		 for (int i = 0; i < numPeople*numPeople*2+numPeople; i++) { //fill the men and women lists
+			 int preference = sc.nextInt(); 
+			 indList.add(preference);
+			 if(indList.size()%numPeople == 0 ){ //if the list % numPeople is 0 then thats all their preferences
+				 indList.add(personCount);
+				 if(i<=numPeople*numPeople){ //if i is in the first half it's a man's preference list
+					 manList.add(indList);
+				 }
+				 else if(i>=numPeople*numPeople && i<numPeople*numPeople*2){ //i is in the second half it's a woman's preference list
+					 womanList.add(indList); 
+				 }
+				 else{ //its the last one which is the matching
+					 theMatching.add(indList); //it's the last one and is the matching
+				 }
+				 indList = new ArrayList<Integer>();
+				 personCount++;
+				 if(personCount>numPeople){
+					 personCount=1; //goes up to man number 1,2...n then resets and goes up women 1,2...n last match will always have a 1
+				 }
 			 }
-		 }
-	  } //end for
-	  sc.close();
-	  System.out.println("prefList: " + prefList.toString());
-	  
-	  List<Integer> stableMatch = new ArrayList<Integer>(); //the matching
-	  
-	  for(int i=0; i<numPeople ;i++){ //for the number of people
-		  int personNum = 1 +i; //the persons actual number like 1 , 2 , 3
-	
-		  //System.out.println("Man number= " + personNum + " and his first preference =" + prefList.get(i).get(0) );
-		  if(personNum != prefList.get(prefList.size()-1).get(i) ) { //if mani+1 != his match in the last array
-			  unhappyCount++;
-			  
-			  //System.out.println("preflist again: " +prefList.toString());
-			  //System.out.println("mans prefList if( " + prefList.get(i).get(i) + " != " + prefList.get(prefList.size()-1).get(i) + " )" );
-			 // System.out.println("adding man" + personNum + " to unhappyManList and his stats are:" + prefList.get(i).toString());
-			  unhappyManList.add(prefList.get(i));
+		  } //end for
+		  sc.close();
+		  
+		//check the mens preferences
+		  for(int i=0; i<manList.size();i++){ 
+			  for(int j=0; j<manList.get(i).indexOf(theMatching.get(0).get(i));j++){
+				  //add the men and women numbers to unstable list if there is any indexes lower than their current match's index
+					  unstableSingle.add(manList.get(i).get(numPeople)); //the man number
+					  unstableSingle.add(manList.get(i).get(j)); //the woman number he prefers
+					  unstableAll.add(unstableSingle);
+					  unstableSingle = new ArrayList<Integer>();
+			  }
 		  }
-		  //if (get(last index).get(that woman).get(that woman's index).get(her first preference) != M of i
-		  //the woman number is the last array so we want index 1 2 or 3 of that and that is the woman number
-		  //who's preference list we want to check, so check her index 0 pick
-		  System.out.println("woman number= " + personNum + " and her first preference =" + prefList.get(3+i).get(0) );
-		  int woman = prefList.get(prefList.size()-1).get(i);
-		  System.out.println("WOMAN NUMBER: " + woman);
-		  System.out.println("womans prefList if( " + prefList.get(woman+numPeople-1).get(i) + " != " + personNum + " )" );
-		  if(prefList.get(woman+numPeople-1).get(0) != personNum){ 
-			  
-			  unhappyCount++;
-			  
-			  System.out.println("-------W" + prefList.get(prefList.size()-1).get(i) + " is not happy with M" + personNum);
-			  unhappyWomanList.add(prefList.get(woman+numPeople-1));
+		  
+		  //check the womens preferences
+		  outerLoop:
+		  for(int i=0; i<womanList.size();i++){
+			  for(int j=0; j<womanList.get((theMatching.get(0).get(i) )-1).indexOf(i+1);j++){
+				  //add the men and women numbers to unstable list if there is any indexes lower than their current match's index
+					  unstableSingle.add(womanList.get(theMatching.get(0).get(i) -1).get(j)); //the man she prefers
+					  unstableSingle.add(theMatching.get(0).get(i)); //the woman number
+					  if(unstableAll.contains(unstableSingle)){ //if that pairing is already their from the mens instabilities
+						  stable=false;
+						  System.out.println("Not stable. (M" +womanList.get(theMatching.get(0).get(i) -1).get(j)+ 
+								  ",W"+theMatching.get(0).get(i)+") is one instability.");
+						  break outerLoop; //we found the droid we were looking for
+					  }
+					  unstableAll.add(unstableSingle);
+					  unstableSingle = new ArrayList<Integer>();
+			  }
+		  } //end for
+		  
+		  if(stable==true){ //if stable never got changed to false
+			  System.out.println("Stable.");
 		  }
-	  } 
-	  System.out.println("unhappy man and unhappy woman list: " +unhappyManList.toString() + " : " + unhappyWomanList.toString());
-	  if(unhappyManList.size() >= 1 && unhappyWomanList.size() >=1){
-		  for(int i=1; i<unhappyManList.size(); i++){
-			  if(unhappyManList.get(i-1).get(i) == unhappyWomanList.get(i-1).get(4) );
-		  }
-	  }
-	  
-	  //thinking something like if at least 2 men and at least 2 women are unhappy then check
-	  //so put the unhappy men with the man number and the preference number into a list
-	  // and put the unhappy women with the woman number and preference list
-	  //then check all combinations to see if there would be a better match
-	  
- } // end checkMatch()
-} //end class
-
+	}
+}
 
 
 
